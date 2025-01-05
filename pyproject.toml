@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "inzicht"
-version = "0.1.3"
+version = "0.1.7"
 description = ""
 authors = ["Alexey Naumov <digitaal.vier@gmail.com>"]
 readme = "README.md"
