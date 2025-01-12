@@ -1,4 +1,4 @@
-from typing import Any, Type, TypeVar
+from typing import Any, TypeVar
 
 from sqlalchemy.orm import DeclarativeBase as OriginalBase
 
