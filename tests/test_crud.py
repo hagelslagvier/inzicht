@@ -6,8 +6,8 @@ from sqlalchemy import Engine, and_, asc, desc, or_
 from sqlalchemy.orm import Session
 from sqlalchemy.sql.elements import BinaryExpression
 
+from inzicht import session_factory
 from inzicht.crud.errors import DoesNotExistError
-from inzicht.crud.generic import session_factory
 from tests.aliases import SideEffect
 from tests.crud import (
     CourseCRUD,
@@ -272,7 +272,7 @@ def test_if_can_delete_record(engine: Engine, content: SideEffect) -> None:
 
 
 def test_if_can_rollback_transaction_when_error_occurs(engine: Engine) -> None:
-    with patch("inzicht.crud.generic.Session") as session_factory_mock:
+    with patch("inzicht.crud.factories.Session") as session_factory_mock:
         session_mock = MagicMock()
         session_mock.begin.side_effect = Exception("Boooom!")
         session_context_mock = MagicMock()

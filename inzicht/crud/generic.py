@@ -1,8 +1,7 @@
 from collections.abc import Generator, Sequence
-from contextlib import contextmanager
 from typing import Any, TypeVar
 
-from sqlalchemy import Engine, func, select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from inzicht.crud.errors import DoesNotExistError
@@ -10,19 +9,6 @@ from inzicht.crud.interfaces import CRUDInterface
 from inzicht.declarative import DeclarativeBase
 
 T = TypeVar("T", bound=DeclarativeBase)
-
-
-@contextmanager
-def session_factory(bind: Engine) -> Generator[Session, None, None]:
-    with Session(bind=bind, expire_on_commit=False) as session:
-        try:
-            session.begin()
-            yield session
-        except:
-            session.rollback()
-            raise
-        else:
-            session.commit()
 
 
 class GenericCRUD(CRUDInterface[T]):
