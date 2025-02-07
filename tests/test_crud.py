@@ -217,6 +217,34 @@ def test_if_can_update_record(engine: Engine) -> None:
     assert updated.updated_on >= created.updated_on
 
 
+def test_if_can_update_via_attributes(engine: Engine, content: SideEffect) -> None:
+    with session_factory(bind=engine) as session:
+        student = StudentCRUD(session=session).read(id=1)
+
+        assert student.id == 1
+        assert student.name == "S1_G1"
+        assert {course.id for course in student.courses} == {1, 2}
+
+    with session_factory(bind=engine) as session:
+        course_1 = CourseCRUD(session=session).read(id=1)
+        course_5 = CourseCRUD(session=session).read(id=5)
+
+        student = StudentCRUD(session=session).read(id=1)
+        student.courses.remove(course_1)
+        student.courses.append(course_5)
+
+        student.name = "Updated"
+
+    with session_factory(bind=engine) as session:
+        student = StudentCRUD(session=session).read(id=1)
+
+        assert student.name == "Updated"
+        assert {course.id for course in student.courses} == {2, 5}
+        assert student.created_on
+        assert student.updated_on
+        assert student.updated_on > student.created_on
+
+
 def test_if_can_get_one_to_one_related_field(
     engine: Engine, content: SideEffect
 ) -> None:
