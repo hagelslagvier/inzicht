@@ -59,7 +59,7 @@ class CRUDInterface(ABC, Generic[T]):
         """
 
     @abstractmethod
-    def read(self, id: int | str) -> T:
+    def get(self, id: int | str) -> T:
         """
         Retrieve a single record by its ID.
 
@@ -71,7 +71,7 @@ class CRUDInterface(ABC, Generic[T]):
         """
 
     @abstractmethod
-    def read_many(
+    def read(
         self,
         *,
         where: Any | None = None,

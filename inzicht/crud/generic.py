@@ -43,7 +43,7 @@ class GenericCRUD(CRUDInterface[T]):
         self.session.flush()
         return instances
 
-    def read(self, id: int | str) -> T:
+    def get(self, id: int | str) -> T:
         model = self.get_model()
         instance = self.session.get(model, id)
         if not instance:
@@ -52,7 +52,7 @@ class GenericCRUD(CRUDInterface[T]):
             )
         return instance
 
-    def read_many(
+    def read(
         self,
         *,
         where: Any | None = None,
@@ -74,14 +74,14 @@ class GenericCRUD(CRUDInterface[T]):
         return items
 
     def update(self, id: int | str, *, payload: dict[str, Any]) -> T:
-        instance = self.read(id=id)
+        instance = self.get(id=id)
         instance.update(**payload)
         self.session.add(instance)
         self.session.flush()
         return instance
 
     def delete(self, id: int | str) -> T:
-        instance = self.read(id=id)
+        instance = self.get(id=id)
         self.session.delete(instance)
         self.session.flush()
         return instance
