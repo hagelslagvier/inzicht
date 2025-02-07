@@ -1,3 +1,5 @@
+import datetime
+
 from sqlalchemy import (
     Column,
     DateTime,
@@ -6,20 +8,21 @@ from sqlalchemy import (
     String,
     Table,
     asc,
-    func,
     text,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from inzicht.declarative import DeclarativeBase
 
+_now = lambda: datetime.datetime.now()
+
 
 class Base(DeclarativeBase):
     __abstract__ = True
 
     id = mapped_column(Integer, primary_key=True)
-    created_on = mapped_column(DateTime, default=func.now())
-    updated_on = mapped_column(DateTime, default=func.now(), onupdate=func.now())
+    created_on = mapped_column(DateTime(timezone=True), default=_now)
+    updated_on = mapped_column(DateTime(timezone=True), default=_now, onupdate=_now)
 
 
 m2m_student_course = Table(
