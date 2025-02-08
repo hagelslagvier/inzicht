@@ -94,7 +94,7 @@ def test_if_can_count_records(
 def test_if_can_create_single_record(session: Session) -> None:
     group_crud = GroupCRUD(session=session)
 
-    created = group_crud.create(payload={"title": "ABC"})
+    created = group_crud.create(title="ABC")
     assert all([created.id, created.created_on, created.updated_on])
     assert created.title == "ABC"
 
@@ -174,9 +174,7 @@ def test_if_can_filter_records(session: Session, content: SideEffect) -> None:
     retrieved = student_crud.read(where=or_(Student.id == 1, Student.id == 1024))
     assert {item.id for item in retrieved} == {1}
 
-    retrieved = student_crud.read(
-        where=and_(Student.id == 1, Student.name == "S1_G1")
-    )
+    retrieved = student_crud.read(where=and_(Student.id == 1, Student.name == "S1_G1"))
     instances = list(retrieved)
     assert len(instances) == 1
     instance = instances[0]
@@ -196,7 +194,7 @@ def test_if_can_filter_records(session: Session, content: SideEffect) -> None:
 
 def test_if_can_update_record(engine: Engine) -> None:
     with session_factory(bind=engine) as session:
-        created = GroupCRUD(session=session).create(payload={"title": "ABC"})
+        created = GroupCRUD(session=session).create(title="ABC")
 
     assert created.id
     assert created.updated_on

@@ -24,6 +24,11 @@ class DeclarativeBase(OriginalBase):
         return safe_attributes
 
     @classmethod
+    def _get_columns(cls) -> list[str]:
+        columns = [c.name for c in cls.__mapper__.columns]
+        return columns
+
+    @classmethod
     def new(cls: type[T], **kwargs: Any) -> T:
         safe_kwargs = {k: v for k, v in kwargs.items() if k in cls._get_attributes()}
         return cls(**safe_kwargs)

@@ -29,9 +29,9 @@ class GenericCRUD(CRUDInterface[T]):
         count = self.session.execute(query).scalar() or 0
         return count
 
-    def create(self, *, payload: dict[str, Any]) -> T:
+    def create(self, **kwargs: Any) -> T:
         model = self.get_model()
-        instance = model.new(**payload)
+        instance = model.new(**kwargs)
         self.session.add(instance)
         self.session.flush()
         return instance
