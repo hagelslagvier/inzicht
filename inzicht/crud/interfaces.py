@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from collections.abc import Generator
+from collections.abc import Generator, Sequence
 from typing import Any, Generic, TypeVar
 
 from inzicht.declarative import DeclarativeBase
@@ -35,7 +35,7 @@ class CRUDInterface(ABC, Generic[T]):
         """
 
     @abstractmethod
-    def create(self, *, payload: dict[str, Any]) -> T:
+    def create(self, **kwargs: Any) -> T:
         """
         Create a new record with the provided payload.
 
@@ -46,6 +46,8 @@ class CRUDInterface(ABC, Generic[T]):
             T: The created record.
         """
 
+    @abstractmethod
+    def bulk_create(self, instances: Sequence[T]) -> Sequence[T]: ...
 
     @abstractmethod
     def get(self, id: int | str) -> T:
@@ -82,7 +84,7 @@ class CRUDInterface(ABC, Generic[T]):
         """
 
     @abstractmethod
-    def update(self, id: int | str, *, payload: dict[str, Any]) -> T:
+    def update(self, id: int | str, **kwargs: Any) -> T:
         """
         Update a record by its ID with the provided payload.
 

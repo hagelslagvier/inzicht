@@ -102,11 +102,21 @@ def test_if_can_create_single_record(session: Session) -> None:
 def test_if_can_create_multiple_records(session: Session) -> None:
     group_crud = GroupCRUD(session=session)
 
-    required = [{"title": f"ABC_{index}"} for index in range(0, 5)]
-    created = [group_crud.create(**item) for item in required]
-    for payload_item, instance in zip(required, created):
-        assert all([instance.id, instance.created_on, instance.updated_on])
-        assert instance.title == payload_item["title"]
+    requested = [{"title": f"ABC_{index}"} for index in range(0, 5)]
+    created = [group_crud.create(**item) for item in requested]
+    for requested_item, created_item in zip(requested, created):
+        assert all([created_item.id, created_item.created_on, created_item.updated_on])
+        assert created_item.title == requested_item["title"]
+
+
+def test_if_can_bulk_create_multiple_records(session: Session) -> None:
+    group_crud = GroupCRUD(session=session)
+
+    requested = [Group(title=f"ABC_{index}") for index in range(0, 5)]
+    created = group_crud.bulk_create(requested)
+    for requested_item, created_item in zip(requested, created):
+        assert all([created_item.id, created_item.created_on, created_item.updated_on])
+        assert created_item.title == requested_item.title
 
 
 def test_if_raises_exception_when_retrieves_nonexistent_record(
@@ -202,9 +212,7 @@ def test_if_can_update_record(engine: Engine) -> None:
     assert created.title == "ABC"
 
     with session_factory(bind=engine) as session:
-        updated = GroupCRUD(session=session).update(
-            id=created.id, payload={"id": 42, "title": "DEF"}
-        )
+        updated = GroupCRUD(session=session).update(id=created.id, title="DEF")
 
     assert updated.id
     assert updated.created_on
