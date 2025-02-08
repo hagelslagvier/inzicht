@@ -15,18 +15,23 @@ class DeclarativeBase(OriginalBase):
         return primary_key
 
     @classmethod
-    def _get_attributes(cls) -> list[str]:
-        primary_key = set(cls._get_primary_key())
-        attributes = {c.name for c in cls.__mapper__.columns} | {
-            r.key for r in cls.__mapper__.relationships
-        }
-        safe_attributes = list(attributes - primary_key)
-        return safe_attributes
-
-    @classmethod
     def _get_columns(cls) -> list[str]:
         columns = [c.name for c in cls.__mapper__.columns]
         return columns
+
+    @classmethod
+    def _get_relationships(cls) -> list[str]:
+        relationships = [r.key for r in cls.__mapper__.relationships]
+        return relationships
+
+    @classmethod
+    def _get_attributes(cls) -> list[str]:
+        primary_key = set(cls._get_primary_key())
+        columns = set(cls._get_columns())
+        relationships = set(cls._get_relationships())
+        attributes = columns | relationships
+        safe_attributes = list(attributes - primary_key)
+        return safe_attributes
 
     @classmethod
     def new(cls: type[T], **kwargs: Any) -> T:
