@@ -102,9 +102,9 @@ def test_if_can_create_single_record(session: Session) -> None:
 def test_if_can_create_multiple_records(session: Session) -> None:
     group_crud = GroupCRUD(session=session)
 
-    payload = [{"title": f"ABC_{index}"} for index in range(0, 5)]
-    created = group_crud.create_many(payload=payload)
-    for payload_item, instance in zip(payload, created):
+    required = [{"title": f"ABC_{index}"} for index in range(0, 5)]
+    created = [group_crud.create(**item) for item in required]
+    for payload_item, instance in zip(required, created):
         assert all([instance.id, instance.created_on, instance.updated_on])
         assert instance.title == payload_item["title"]
 

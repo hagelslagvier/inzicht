@@ -1,4 +1,4 @@
-from collections.abc import Generator, Sequence
+from collections.abc import Generator
 from typing import Any, TypeVar
 
 from sqlalchemy import func, select
@@ -36,12 +36,12 @@ class GenericCRUD(CRUDInterface[T]):
         self.session.flush()
         return instance
 
-    def create_many(self, *, payload: Sequence[dict[str, Any]]) -> Sequence[T]:
-        model = self.get_model()
-        instances = [model.new(**item) for item in payload]
-        self.session.add_all(instances)
-        self.session.flush()
-        return instances
+    # def create_many(self, *, payload: Sequence[dict[str, Any]]) -> Sequence[T]:
+    #     model = self.get_model()
+    #     instances = [model.new(**item) for item in payload]
+    #     self.session.add_all(instances)
+    #     self.session.flush()
+    #     return instances
 
     def get(self, id: int | str) -> T:
         model = self.get_model()

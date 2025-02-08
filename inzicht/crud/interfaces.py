@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from collections.abc import Generator, Sequence
+from collections.abc import Generator
 from typing import Any, Generic, TypeVar
 
 from inzicht.declarative import DeclarativeBase
@@ -46,17 +46,6 @@ class CRUDInterface(ABC, Generic[T]):
             T: The created record.
         """
 
-    @abstractmethod
-    def create_many(self, *, payload: Sequence[dict[str, Any]]) -> Sequence[T]:
-        """
-        Create multiple records with the provided payload.
-
-        Args:
-            payload (Sequence[dict[str, Any]]): A sequence of data dictionaries to create the new records.
-
-        Returns:
-            Sequence[T]: A sequence of created records.
-        """
 
     @abstractmethod
     def get(self, id: int | str) -> T:
