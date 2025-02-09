@@ -41,7 +41,7 @@ class GenericCRUD(CRUDInterface[T]):
         self.session.flush()
         return instances
 
-    def get(self, id: int | str) -> T:
+    def get(self, id: int | str, /) -> T:
         model = self.get_model()
         instance = self.session.get(model, id)
         if not instance:
@@ -71,15 +71,15 @@ class GenericCRUD(CRUDInterface[T]):
         items = (item for item in self.session.execute(query).scalars())
         return items
 
-    def update(self, id: int | str, **kwargs: Any) -> T:
-        instance = self.get(id=id)
+    def update(self, id: int | str, /, **kwargs: Any) -> T:
+        instance = self.get(id)
         instance.update(**kwargs)
         self.session.add(instance)
         self.session.flush()
         return instance
 
-    def delete(self, id: int | str) -> T:
-        instance = self.get(id=id)
+    def delete(self, id: int | str, /) -> T:
+        instance = self.get(id)
         self.session.delete(instance)
         self.session.flush()
         return instance

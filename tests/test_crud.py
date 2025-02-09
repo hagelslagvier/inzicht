@@ -123,7 +123,7 @@ def test_if_raises_exception_when_retrieves_nonexistent_record(
     session: Session,
 ) -> None:
     with pytest.raises(DoesNotExistError) as error:
-        GroupCRUD(session=session).get(id=42)
+        GroupCRUD(session=session).get(42)
 
     assert (
         str(error.value)
@@ -134,7 +134,7 @@ def test_if_raises_exception_when_retrieves_nonexistent_record(
 def test_if_can_read_single_record(session: Session, content: SideEffect) -> None:
     student_crud = StudentCRUD(session=session)
 
-    retrieved = student_crud.get(id=1)
+    retrieved = student_crud.get(1)
     assert retrieved.id == 1
 
 
@@ -212,7 +212,7 @@ def test_if_can_update_record(engine: Engine) -> None:
     assert created.title == "ABC"
 
     with session_factory(bind=engine) as session:
-        updated = GroupCRUD(session=session).update(id=created.id, title="DEF")
+        updated = GroupCRUD(session=session).update(created.id, title="DEF")
 
     assert updated.id
     assert updated.created_on
@@ -225,24 +225,24 @@ def test_if_can_update_record(engine: Engine) -> None:
 
 def test_if_can_update_via_attributes(engine: Engine, content: SideEffect) -> None:
     with session_factory(bind=engine) as session:
-        student = StudentCRUD(session=session).get(id=1)
+        student = StudentCRUD(session=session).get(1)
 
         assert student.id == 1
         assert student.name == "S1_G1"
         assert {course.id for course in student.courses} == {1, 2}
 
     with session_factory(bind=engine) as session:
-        course_1 = CourseCRUD(session=session).get(id=1)
-        course_5 = CourseCRUD(session=session).get(id=5)
+        course_1 = CourseCRUD(session=session).get(1)
+        course_5 = CourseCRUD(session=session).get(5)
 
-        student = StudentCRUD(session=session).get(id=1)
+        student = StudentCRUD(session=session).get(1)
         student.courses.remove(course_1)
         student.courses.append(course_5)
 
         student.name = "Updated"
 
     with session_factory(bind=engine) as session:
-        student = StudentCRUD(session=session).get(id=1)
+        student = StudentCRUD(session=session).get(1)
 
         assert student.name == "Updated"
         assert {course.id for course in student.courses} == {2, 5}
@@ -255,12 +255,12 @@ def test_if_can_get_one_to_one_related_field(
     engine: Engine, content: SideEffect
 ) -> None:
     with session_factory(bind=engine) as session:
-        student = StudentCRUD(session=session).get(id=1)
+        student = StudentCRUD(session=session).get(1)
         assert student.id == 1
         assert student.locker.id == 1
 
     with session_factory(bind=engine) as session:
-        locker = LockerCRUD(session=session).get(id=1)
+        locker = LockerCRUD(session=session).get(1)
         assert locker.id == 1
         assert locker.student.id == 1
 
@@ -269,7 +269,7 @@ def test_if_can_get_one_to_many_related_field(
     engine: Engine, content: SideEffect
 ) -> None:
     with session_factory(bind=engine) as session:
-        group = GroupCRUD(session=session).get(id=1)
+        group = GroupCRUD(session=session).get(1)
         assert group.id == 1
         assert {student.id for student in group.students} == {1, 2, 3, 4, 5}
 
@@ -278,12 +278,12 @@ def test_if_can_get_many_to_many_related_field(
     engine: Engine, content: SideEffect
 ) -> None:
     with session_factory(bind=engine) as session:
-        student = StudentCRUD(session=session).get(id=1)
+        student = StudentCRUD(session=session).get(1)
         assert student.id == 1
         assert {course.id for course in student.courses} == {1, 2}
 
     with session_factory(bind=engine) as session:
-        course = CourseCRUD(session=session).get(id=1)
+        course = CourseCRUD(session=session).get(1)
         assert course.id == 1
         assert {student.id for student in course.students} == {1, 4, 5, 6, 7}
 
@@ -295,10 +295,10 @@ def test_if_can_delete_record(engine: Engine, content: SideEffect) -> None:
         count = course_crud.count()
         assert count == 5
 
-        retrieved = course_crud.get(id=1)
+        retrieved = course_crud.get(1)
         assert retrieved.id == 1
 
-        deleted = course_crud.delete(id=1)
+        deleted = course_crud.delete(1)
         assert deleted.id == 1
 
         count = course_crud.count()
@@ -315,7 +315,7 @@ def test_if_can_rollback_transaction_when_error_occurs(engine: Engine) -> None:
 
         with pytest.raises(Exception) as error:
             with session_factory(bind=engine) as session:
-                StudentCRUD(session=session).get(id=1)
+                StudentCRUD(session=session).get(1)
 
         assert str(error.value) == "Boooom!"
 

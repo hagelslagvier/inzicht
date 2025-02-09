@@ -59,7 +59,7 @@ class CRUDInterface(ABC, Generic[T]):
         """
 
     @abstractmethod
-    def get(self, id: int | str) -> T:
+    def get(self, id: int | str, /) -> T:
         """
         Retrieve a single record by its ID.
 
@@ -93,7 +93,7 @@ class CRUDInterface(ABC, Generic[T]):
         """
 
     @abstractmethod
-    def update(self, id: int | str, **kwargs: Any) -> T:
+    def update(self, id: int | str, /, **kwargs: Any) -> T:
         """
         Update a record by its ID with the provided payload.
 
@@ -106,7 +106,7 @@ class CRUDInterface(ABC, Generic[T]):
         """
 
     @abstractmethod
-    def delete(self, id: int | str) -> T:
+    def delete(self, id: int | str, /) -> T:
         """
         Delete a record by its ID.
 
