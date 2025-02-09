@@ -37,17 +37,26 @@ class CRUDInterface(ABC, Generic[T]):
     @abstractmethod
     def create(self, **kwargs: Any) -> T:
         """
-        Create a new record with the provided payload.
+        Create a new record from the provided keyword-arguments.
 
         Args:
-            payload (dict[str, Any]): The data to create the new record.
+        **kwargs (Any): The attributes to initialize the model instance with.
 
         Returns:
             T: The created record.
         """
 
     @abstractmethod
-    def bulk_create(self, instances: Sequence[T]) -> Sequence[T]: ...
+    def bulk_create(self, instances: Sequence[T], /) -> Sequence[T]:
+        """
+        Create multiple records from the provided instances.
+
+        Args:
+            instances (Sequence[T]): A sequence of items to be added to the database.
+
+        Returns:
+            Sequence[T]: A sequence of created records.
+        """
 
     @abstractmethod
     def get(self, id: int | str) -> T:
@@ -90,7 +99,7 @@ class CRUDInterface(ABC, Generic[T]):
 
         Args:
             id (int | str): The ID of the record to update.
-            payload (dict[str, Any]): The data to update the record with.
+            kwargs (Any): The attributes to update the record with.
 
         Returns:
             T: The updated record.
