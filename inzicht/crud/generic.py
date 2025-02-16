@@ -72,7 +72,12 @@ class GenericCRUD(CRUDInterface[T]):
         return items
 
     def update(self, id: int | str, /, **kwargs: Any) -> T:
-        instance = self.get(id)
+        model = self.get_model()
+        instance = self.session.get(model, id, with_for_update={"nowait": True})
+        if not instance:
+            raise DoesNotExistError(
+                f"Instance of model='{model}' with id='{id}' was not found"
+            )
         instance.update(**kwargs)
         self.session.add(instance)
         self.session.flush()
