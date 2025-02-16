@@ -11,7 +11,7 @@ from tests.crud import CourseCRUD, GroupCRUD, LockerCRUD, StudentCRUD
 @pytest.fixture
 def engine() -> Generator[Engine, None, None]:
     engine = create_engine(
-        url="sqlite://",
+        url="sqlite:///:memory:",
         connect_args={"check_same_thread": False},
         poolclass=StaticPool,
     )
