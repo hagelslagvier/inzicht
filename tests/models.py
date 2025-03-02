@@ -47,7 +47,7 @@ class Group(Base):
     title: Mapped[str] = mapped_column(String(8), unique=True)
     students: Mapped[list["Student"]] = (
         relationship(  # Mapped[List[<model>]] -> one-to-many
-            back_populates="group", order_by=asc(text("students.id"))
+            back_populates="group", order_by=asc(text("students.id")), lazy="selectin"
         )
     )
 
@@ -60,16 +60,15 @@ class Student(Base):
 
     name: Mapped[str] = mapped_column(String(64), unique=True)
     group_id: Mapped[int] = mapped_column(ForeignKey("groups.id"))
-    group: Mapped["Group"] = relationship(
-        back_populates="students",
-    )
+    group: Mapped["Group"] = relationship(back_populates="students", lazy="selectin")
     locker_id: Mapped[int] = mapped_column(ForeignKey("lockers.id"))
-    locker: Mapped["Locker"] = relationship(back_populates="student")
+    locker: Mapped["Locker"] = relationship(back_populates="student", lazy="selectin")
 
     courses: Mapped[list["Course"]] = relationship(
         secondary=m2m_student_course,  # many-to-many
         back_populates="students",
         order_by=asc(text("courses.id")),
+        lazy="selectin",
     )
 
     def __repr__(self) -> str:
@@ -85,6 +84,7 @@ class Course(Base):
         secondary=m2m_student_course,  # many-to-many
         back_populates="courses",
         order_by=asc(text("students.id")),
+        lazy="selectin",
     )
 
     def __repr__(self) -> str:
@@ -96,7 +96,7 @@ class Locker(Base):
 
     code: Mapped[str] = mapped_column(String(16))
     student: Mapped[Student] = relationship(
-        back_populates="locker"
+        back_populates="locker", lazy="selectin"
     )  # Mapped[<model>] -> one-to-one
 
     def __repr__(self) -> str:

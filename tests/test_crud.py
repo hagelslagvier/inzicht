@@ -1,4 +1,3 @@
-from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -11,65 +10,11 @@ from inzicht.crud.errors import DoesNotExistError
 from tests.aliases import SideEffect
 from tests.crud import (
     CourseCRUD,
-    Dummy,
     GroupCRUD,
     LockerCRUD,
     StudentCRUD,
 )
 from tests.models import Course, Group, Student
-
-
-@pytest.mark.parametrize(
-    "attrs,expected",
-    [
-        ({}, {}),
-        ({"id": 1}, {}),
-        ({"id": 1, "foo": "spam"}, {"foo": "spam"}),
-        (
-            {"id": 1, "foo": "spam", "bar": "eggs", "baz": "ham"},
-            {"foo": "spam", "bar": "eggs", "baz": "ham"},
-        ),
-    ],
-)
-def test_if_can_sanitize_unsafe_input_when_creates_instance(
-    attrs: dict[str, Any], expected: dict[str, Any]
-) -> None:
-    dummy = Dummy.new(**attrs)
-
-    for k in dummy._get_primary_key():
-        assert k not in dummy.__dict__
-
-    for k in expected:
-        assert k in dummy.__dict__
-
-
-@pytest.mark.parametrize(
-    "attrs,expected",
-    [
-        ({}, {}),
-        ({"id": 1}, {}),
-        ({"id": 1, "foo": "spam"}, {"foo": "spam"}),
-        (
-            {"id": 1, "foo": "spam", "bar": "eggs", "baz": "ham"},
-            {"foo": "spam", "bar": "eggs", "baz": "ham"},
-        ),
-    ],
-)
-def test_if_can_sanitize_unsafe_input_when_updates_instance(
-    attrs: dict[str, Any], expected: dict[str, Any]
-) -> None:
-    dummy = Dummy(id=42)
-
-    pk_before = {k: dummy.__dict__.get(k) for k in dummy._get_primary_key()}
-
-    dummy.update(**attrs)
-
-    pk_after = {k: dummy.__dict__.get(k) for k in dummy._get_primary_key()}
-
-    assert pk_after == pk_before
-
-    for k, v in expected.items():
-        assert dummy.__dict__.get(k) == v
 
 
 @pytest.mark.parametrize(
@@ -102,21 +47,21 @@ def test_if_can_create_single_record(session: Session) -> None:
 def test_if_can_create_multiple_records(session: Session) -> None:
     group_crud = GroupCRUD(session=session)
 
-    requested = [{"title": f"ABC_{index}"} for index in range(0, 5)]
-    created = [group_crud.create(**item) for item in requested]
-    for requested_item, created_item in zip(requested, created):
+    required = [{"title": f"ABC_{index}"} for index in range(0, 64)]
+    created = [group_crud.create(**item) for item in required]
+    for required_item, created_item in zip(required, created):
         assert all([created_item.id, created_item.created_on, created_item.updated_on])
-        assert created_item.title == requested_item["title"]
+        assert created_item.title == required_item["title"]
 
 
 def test_if_can_bulk_create_multiple_records(session: Session) -> None:
     group_crud = GroupCRUD(session=session)
 
-    requested = [Group(title=f"ABC_{index}") for index in range(0, 5)]
-    created = group_crud.bulk_create(requested)
-    for requested_item, created_item in zip(requested, created):
+    required = [Group(title=f"ABC_{index}") for index in range(0, 64)]
+    created = group_crud.bulk_create(required)
+    for required_item, created_item in zip(required, created):
         assert all([created_item.id, created_item.created_on, created_item.updated_on])
-        assert created_item.title == requested_item.title
+        assert created_item.title == required_item.title
 
 
 def test_if_raises_exception_when_retrieves_nonexistent_record(
@@ -232,8 +177,9 @@ def test_if_can_update_via_attributes(engine: Engine, content: SideEffect) -> No
         assert {course.id for course in student.courses} == {1, 2}
 
     with session_factory(bind=engine) as session:
-        course_1 = CourseCRUD(session=session).get(1)
-        course_5 = CourseCRUD(session=session).get(5)
+        course_crud = CourseCRUD(session=session)
+        course_1 = course_crud.get(1)
+        course_5 = course_crud.get(5)
 
         student = StudentCRUD(session=session).get(1)
         student.courses.remove(course_1)

@@ -1,11 +1,12 @@
 from typing import Any, TypeVar
 
+from sqlalchemy.ext.asyncio import AsyncAttrs
 from sqlalchemy.orm import DeclarativeBase as OriginalBase
 
 T = TypeVar("T", bound="DeclarativeBase")
 
 
-class DeclarativeBase(OriginalBase):
+class DeclarativeBase(AsyncAttrs, OriginalBase):
     __abstract__ = True
     __mapper_args__ = {"eager_defaults": True}
 
