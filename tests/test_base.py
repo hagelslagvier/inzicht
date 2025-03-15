@@ -1,10 +1,22 @@
 from typing import Any
 
 import pytest
+from sqlalchemy.orm import Session
 
+from inzicht import GenericCRUD
 from tests.crud import (
+    Course,
     Dummy,
+    Group,
+    Locker,
+    Student,
 )
+
+
+@pytest.mark.parametrize("type_parameter", [Group, Student, Course, Locker, Dummy])
+def test_if_can_get_model(type_parameter: Any, session: Session) -> None:
+    crud = GenericCRUD[type_parameter](session=session)
+    assert crud.get_model() is type_parameter
 
 
 @pytest.mark.parametrize(

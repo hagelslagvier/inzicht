@@ -5,7 +5,7 @@ from sqlalchemy import Engine, and_, asc, desc, or_
 from sqlalchemy.orm import Session
 from sqlalchemy.sql.elements import BinaryExpression
 
-from inzicht import session_factory
+from inzicht import GenericCRUD, session_factory
 from inzicht.crud.errors import DoesNotExistError
 from tests.aliases import SideEffect
 from tests.crud import (
@@ -267,3 +267,56 @@ def test_if_can_rollback_transaction_when_error_occurs(engine: Engine) -> None:
 
         session_mock.begin.assert_called_once()
         session_mock.rollback.assert_called_once()
+
+
+def test_if_can_parameterize_at_instantiation(
+    engine: Engine, content: SideEffect
+) -> None:
+    with session_factory(bind=engine) as session:
+        group_crud = GenericCRUD[Group](session=session)
+        group = group_crud.create(title="foo_bar_baz")
+        created_id = group.id
+
+        assert created_id
+
+    with session_factory(bind=engine) as session:
+        group_crud = GenericCRUD[Group](session=session)
+        group = group_crud.get(created_id)
+
+        assert group.id == created_id
+
+    with session_factory(bind=engine) as session:
+        group_crud = GenericCRUD[Group](session=session)
+        retrieved = group_crud.read(where=Group.title == "foo_bar_baz")
+        (found,) = list(retrieved)
+
+        assert found.id == created_id
+
+    with session_factory(bind=engine) as session:
+        group_crud = GenericCRUD[Group](session=session)
+        updated = group_crud.update(created_id, title="baz_bar_foo")
+        assert updated.id == created_id
+        assert updated.title == "baz_bar_foo"
+
+    with session_factory(bind=engine) as session:
+        group_crud = GenericCRUD[Group](session=session)
+        group = group_crud.get(created_id)
+
+        assert group.id == updated.id
+        assert group.title == "baz_bar_foo"
+
+    with session_factory(bind=engine) as session:
+        group_crud = GenericCRUD[Group](session=session)
+        deleted = group_crud.delete(created_id)
+
+        assert deleted.id == created_id
+
+    with session_factory(bind=engine) as session:
+        group_crud = GenericCRUD[Group](session=session)
+        with pytest.raises(DoesNotExistError) as error:
+            group_crud.get(created_id)
+
+        assert (
+            str(error.value)
+            == f"Instance of model='<class 'tests.models.Group'>' with id='{created_id}' was not found"
+        )
