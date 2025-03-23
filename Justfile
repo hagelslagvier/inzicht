@@ -1,5 +1,5 @@
 fix:
-    find inzicht/ tests/ -name "*.py" -type f | xargs -I {} pyupgrade --py312-plus {}
+    find inzicht/ tests/ -name "*.py" -type f | xargs -I {} pyupgrade --py310-plus {}
     ruff check inzicht/ tests/ --fix
     ruff format inzicht/ tests/
 

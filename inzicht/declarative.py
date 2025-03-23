@@ -1,14 +1,13 @@
-from typing import Any, TypeVar
+from typing import Any, ClassVar
 
 from sqlalchemy.ext.asyncio import AsyncAttrs
 from sqlalchemy.orm import DeclarativeBase as OriginalBase
+from sqlalchemy.orm.mapper import Mapper
+from typing_extensions import Self
 
-T = TypeVar("T", bound="DeclarativeBase")
 
-
-class DeclarativeBase(AsyncAttrs, OriginalBase):
-    __abstract__ = True
-    __mapper_args__ = {"eager_defaults": True}
+class InzichtBase:
+    __mapper__: ClassVar[Mapper]
 
     @classmethod
     def _get_primary_key(cls) -> list[str]:
@@ -35,7 +34,7 @@ class DeclarativeBase(AsyncAttrs, OriginalBase):
         return safe_attributes
 
     @classmethod
-    def new(cls: type[T], **kwargs: Any) -> T:
+    def new(cls, **kwargs: Any) -> Self:
         safe_kwargs = {k: v for k, v in kwargs.items() if k in cls._get_attributes()}
         return cls(**safe_kwargs)
 
@@ -43,3 +42,8 @@ class DeclarativeBase(AsyncAttrs, OriginalBase):
         safe_kwargs = {k: v for k, v in kwargs.items() if k in self._get_attributes()}
         for k, v in safe_kwargs.items():
             setattr(self, k, v)
+
+
+class DeclarativeBase(AsyncAttrs, OriginalBase, InzichtBase):
+    __abstract__ = True
+    __mapper_args__ = {"eager_defaults": True}
