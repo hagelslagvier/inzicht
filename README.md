@@ -7,7 +7,7 @@ A Python library that provides generic Create, Read, Update, and Delete (CRUD) f
 ---
 
 ## Features
-- **Generic CRUD Operations:** Perform CRUD operations on SQLAlchemy models with minimal code.
+- **Generic CRUD Operations:** Perform CRUD operations on [SQLAlchemy](https://www.sqlalchemy.org) and [SQLModel](https://sqlmodel.tiangolo.com) models with minimal code.
 - **Flexible Querying:** Easily apply filters, sorting, and pagination.
 - **Extensible:** Override and customize CRUD methods as needed.
 
@@ -19,6 +19,12 @@ Install the package via pip:
 
 ```bash
 pip install inzicht
+```
+
+Install the package via poetry:
+
+```bash
+poetry add inzicht
 ```
 
 ## License
