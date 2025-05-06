@@ -76,7 +76,7 @@ class CRUDInterface(ABC, Generic[T]):
         where: Any | None = None,
         order_by: Any | None = None,
         skip: int = 0,
-        take: int = 10,
+        take: int | None = None,
     ) -> Generator[T, None, None]:
         """
         Retrieve multiple records based on conditions.
