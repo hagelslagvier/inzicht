@@ -77,7 +77,7 @@ class AioCRUDInterface(ABC, Generic[T]):
         where: Any | None = None,
         order_by: Any | None = None,
         skip: int = 0,
-        take: int = 10,
+        take: int | None = None,
     ) -> Generator[T, None, None]:
         """
         Retrieve multiple records based on conditions.
@@ -86,7 +86,7 @@ class AioCRUDInterface(ABC, Generic[T]):
             where (Any, optional): Filter conditions for retrieving records.
             order_by (Any, optional): Criteria to order the results.
             skip (int, optional): Number of records to skip. Defaults to 0.
-            take (int, optional): Number of records to retrieve. Defaults to 10.
+            take (int, optional): Number of records to retrieve. Defaults to None, which mean no limit.
 
         Returns:
             Generator[T, None, None]: A generator of the retrieved records.
