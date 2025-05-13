@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "inzicht"
-version = "0.1.16"
-description = ""
+version = "0.1.17"
+description = "A Python library that provides generic CRUD functionality streamlining database operations."
 authors = ["Alexey Naumov <digitaal.vier@gmail.com>"]
 readme = "README.md"
 
