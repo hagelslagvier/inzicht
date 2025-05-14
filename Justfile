@@ -28,3 +28,7 @@ clean:
     find inzicht tests -type d -name ".*_cache" -exec rm -rf {} +
     find inzicht tests -type d -name "__pycache__" -exec rm -rf {} +
     find inzicht tests -type f \( -name "*.pyc" -o -name "*.pyo" \) -exec rm -f {} +
+
+package:
+    poetry build
+    poetry publish
