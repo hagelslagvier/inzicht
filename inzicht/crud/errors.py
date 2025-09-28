@@ -4,3 +4,11 @@ class BaseORMError(Exception):
 
 class DoesNotExistError(BaseORMError):
     pass
+
+
+class IntegrityError(BaseORMError):
+    pass
+
+
+class UnknowError(BaseORMError):
+    pass
