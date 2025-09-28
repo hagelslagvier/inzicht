@@ -72,7 +72,7 @@ def test_if_raises_exception_when_retrieves_nonexistent_record(
 
     assert (
         str(error.value)
-        == "Instance of model='<class 'tests.models.Group'>' with id='42' was not found"
+        == "DB operation [GET] on instance of model '<class 'tests.models.Group'>' with id '42' failed because the instance was not found"
     )
 
 
@@ -318,8 +318,9 @@ def test_if_can_parameterize_at_instantiation(
 
         assert (
             str(error.value)
-            == f"Instance of model='<class 'tests.models.Group'>' with id='{created_id}' was not found"
+            == f"DB operation [GET] on instance of model '<class 'tests.models.Group'>' with id '3' failed because the instance was not found"
         )
+        assert error.value.kwargs == dict(id=created_id)
 
 
 def test_if_raises_integrity_error_when_creating_single_instance_given_unique_constraint_violated(
@@ -329,10 +330,12 @@ def test_if_raises_integrity_error_when_creating_single_instance_given_unique_co
         group_crud = GenericCRUD[Group](session=session)
         group_crud.create(title="foo_bar_baz")
 
-    with pytest.raises(IntegrityError):
+    with pytest.raises(IntegrityError) as error:
         with session_factory(bind=engine) as session:
             group_crud = GenericCRUD[Group](session=session)
             group_crud.create(title="foo_bar_baz")
+
+    assert error.value.kwargs == dict(title="foo_bar_baz")
 
 
 def test_if_raises_integrity_error_when_creating_multiple_instances_given_unique_constraint_violated(
@@ -354,9 +357,10 @@ def test_if_raises_error_when_reading_nonexistent_instance(
         group_crud.get(42)
 
     assert (
-        "Instance of model='<class 'tests.models.Group'>' with id='42' was not found"
-        == str(error.value)
+        str(error.value)
+        == "DB operation [GET] on instance of model '<class 'tests.models.Group'>' with id '42' failed because the instance was not found"
     )
+    assert error.value.kwargs == dict(id=42)
 
 
 def test_if_raises_error_when_updating_nonexistent_instance(
@@ -367,9 +371,10 @@ def test_if_raises_error_when_updating_nonexistent_instance(
         group_crud.update(42, title="foo")
 
     assert (
-        "Instance of model='<class 'tests.models.Group'>' with id='42' was not found"
-        == str(error.value)
+        str(error.value)
+        == "DB operation [UPDATE] on instance of model '<class 'tests.models.Group'>' with id '42' failed because the instance was not found"
     )
+    assert error.value.kwargs == dict(id=42, title="foo")
 
 
 def test_if_raises_integrity_error_when_updating_instance_given_unique_constraint_violated(
@@ -394,6 +399,7 @@ def test_if_raises_error_when_deleting_nonexistent_instance(
         group_crud.delete(42)
 
     assert (
-        "Instance of model='<class 'tests.models.Group'>' with id='42' was not found"
-        == str(error.value)
+        str(error.value)
+        == "DB operation [GET] on instance of model '<class 'tests.models.Group'>' with id '42' failed because the instance was not found"
     )
+    assert error.value.kwargs == dict(id=42)

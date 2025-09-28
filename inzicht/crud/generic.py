@@ -39,32 +39,39 @@ class GenericCRUD(CRUDInterface[T]):
     def create(self, **kwargs: Any) -> T:
         model = self.get_model()
         instance = model.new(**kwargs)
+        message = f"DB operation [CREATE] on instance '{instance}' of model '{model}'"
         try:
             self.session.add(instance)
             self.session.flush()
         except sqlalchemy.exc.IntegrityError as error:
-            raise IntegrityError from error
+            error_message = f"{message} failed because of integrity constraints"
+            raise IntegrityError(error_message, **kwargs) from error
         except Exception as error:
-            raise UnknowError from error
+            error_message = f"{message} failed because of unknown error"
+            raise UnknowError(error_message, **kwargs) from error
         return instance
 
     def bulk_create(self, instances: Sequence[T]) -> Sequence[T]:
+        model = self.get_model()
+        message = f"DB operation [BULK_CREATE] on {len(instances)} instances '[{instances[0]},...]' of model '{model}'"
         try:
             self.session.add_all(instances)
             self.session.flush()
         except sqlalchemy.exc.IntegrityError as error:
-            raise IntegrityError from error
+            error_message = f"{message} failed because of integrity constraints"
+            raise IntegrityError(error_message) from error
         except Exception as error:
-            raise UnknowError from error
+            error_message = f"{message} failed because of unknow error"
+            raise UnknowError(error_message) from error
         return instances
 
     def get(self, id: int | str, /) -> T:
         model = self.get_model()
         instance = self.session.get(model, id)
+        message = f"DB operation [GET] on instance of model '{model}' with id '{id}'"
         if not instance:
-            raise DoesNotExistError(
-                f"Instance of model='{model}' with id='{id}' was not found"
-            )
+            error_message = f"{message} failed because the instance was not found"
+            raise DoesNotExistError(error_message, id=id)
         return instance
 
     def read(
@@ -91,27 +98,29 @@ class GenericCRUD(CRUDInterface[T]):
     def update(self, id: int | str, /, **kwargs: Any) -> T:
         model = self.get_model()
         instance = self.session.get(model, id, with_for_update={"nowait": True})
+        message = f"DB operation [UPDATE] on instance of model '{model}' with id '{id}'"
         if not instance:
-            raise DoesNotExistError(
-                f"Instance of model='{model}' with id='{id}' was not found"
-            )
+            error_message = f"{message} failed because the instance was not found"
+            raise DoesNotExistError(error_message, id=id, **kwargs)
         instance.update(**kwargs)
         try:
             self.session.add(instance)
             self.session.flush()
         except sqlalchemy.exc.IntegrityError as error:
-            raise IntegrityError from error
+            error_message = f"{message} failed because of integrity constraints"
+            raise IntegrityError(error_message, **kwargs) from error
         except Exception as error:
-            raise UnknowError from error
+            error_message = f"{message} failed because of unknow error"
+            raise UnknowError(error_message, **kwargs) from error
         return instance
 
     def delete(self, id: int | str, /) -> T:
         model = self.get_model()
         instance = self.get(id)
+        message = f"DB operation [DELETE] on instance {instance} of model '{model}' with id '{id}'"
         if not instance:
-            raise DoesNotExistError(
-                f"Instance of model='{model}' with id='{id}' was not found"
-            )
+            error_message = f"{message} failed because the instance was not found"
+            raise DoesNotExistError(error_message)
         self.session.delete(instance)
         self.session.flush()
         return instance

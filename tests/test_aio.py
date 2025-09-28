@@ -99,7 +99,7 @@ async def test_if_raises_async_exception_when_retrieves_nonexistent_record(
 
     assert (
         str(error.value)
-        == "Instance of model='<class 'tests.models.Group'>' with id='42' was not found"
+        == "DB operation [GET] on instance of model '<class 'tests.models.Group'>' with id '42' failed because the instance was not found"
     )
 
 
@@ -370,8 +370,8 @@ async def test_if_async_raises_error_when_reading_nonexistent_instance(
         await group_crud.get(42)
 
     assert (
-        "Instance of model='<class 'tests.models.Group'>' with id='42' was not found"
-        == str(error.value)
+        str(error.value)
+        == "DB operation [GET] on instance of model '<class 'tests.models.Group'>' with id '42' failed because the instance was not found"
     )
 
 
@@ -384,8 +384,8 @@ async def test_if_async_raises_error_when_updating_nonexistent_instance(
         await group_crud.update(42, title="foo")
 
     assert (
-        "Instance of model='<class 'tests.models.Group'>' with id='42' was not found"
-        == str(error.value)
+        str(error.value)
+        == "DB operation [UPDATE] on instance of model '<class 'tests.models.Group'>' with id '42' failed because the instance was not found"
     )
 
 
@@ -413,6 +413,6 @@ async def test_if_async_raises_error_when_deleting_nonexistent_instance(
         await group_crud.delete(42)
 
     assert (
-        "Instance of model='<class 'tests.models.Group'>' with id='42' was not found"
-        == str(error.value)
+        str(error.value)
+        == "DB operation [GET] on instance of model '<class 'tests.models.Group'>' with id '42' failed because the instance was not found"
     )
