@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession
 from sqlalchemy.sql.elements import BinaryExpression
 
 from inzicht.aio.crud.factories import async_session_factory
-from inzicht.crud.errors import DoesNotExistError
+from inzicht.crud.errors import DoesNotExistError, IntegrityError
 from tests.aio.crud import AioCourseCRUD, AioGroupCRUD, AioLockerCRUD, AioStudentCRUD
 from tests.aliases import SideEffect
 from tests.models import Course, Group, Student
@@ -333,3 +333,86 @@ async def test_if_can_async_rollback_transaction_when_error_occurs(
 
         session_mock.begin.assert_called_once()
         session_mock.rollback.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_if_async_raises_integrity_error_when_creating_single_instance_given_unique_constraint_violated(
+    async_engine: AsyncEngine,
+) -> None:
+    async with async_session_factory(bind=async_engine) as async_session:
+        group_crud = AioGroupCRUD(async_session=async_session)
+        await group_crud.create(title="foo_bar_baz")
+
+    with pytest.raises(IntegrityError):
+        async with async_session_factory(bind=async_engine) as async_session:
+            group_crud = AioGroupCRUD(async_session=async_session)
+            await group_crud.create(title="foo_bar_baz")
+
+
+@pytest.mark.asyncio
+async def test_if_async_raises_integrity_error_when_creating_multiple_instances_given_unique_constraint_violated(
+    async_engine: AsyncEngine,
+) -> None:
+    with pytest.raises(IntegrityError):
+        async with async_session_factory(bind=async_engine) as async_session:
+            group_crud = AioGroupCRUD(async_session=async_session)
+            await group_crud.bulk_create(
+                [Group(title=f"foo_bar_baz"), Group(title=f"foo_bar_baz")]
+            )
+
+
+@pytest.mark.asyncio
+async def test_if_async_raises_error_when_reading_nonexistent_instance(
+    async_session: AsyncSession, async_content: SideEffect
+) -> None:
+    with pytest.raises(DoesNotExistError) as error:
+        group_crud = AioGroupCRUD(async_session=async_session)
+        await group_crud.get(42)
+
+    assert (
+        "Instance of model='<class 'tests.models.Group'>' with id='42' was not found"
+        == str(error.value)
+    )
+
+
+@pytest.mark.asyncio
+async def test_if_async_raises_error_when_updating_nonexistent_instance(
+    async_session: AsyncSession, async_content: SideEffect
+) -> None:
+    with pytest.raises(DoesNotExistError) as error:
+        group_crud = AioGroupCRUD(async_session=async_session)
+        await group_crud.update(42, title="foo")
+
+    assert (
+        "Instance of model='<class 'tests.models.Group'>' with id='42' was not found"
+        == str(error.value)
+    )
+
+
+@pytest.mark.asyncio
+async def test_if_async_raises_integrity_error_when_updating_instance_given_unique_constraint_violated(
+    async_engine: AsyncEngine,
+) -> None:
+    async with async_session_factory(bind=async_engine) as async_session:
+        group_crud = AioGroupCRUD(async_session=async_session)
+        g1 = await group_crud.create(title="foo_bar_baz_1")
+        g2 = await group_crud.create(title="foo_bar_baz_2")
+
+    with pytest.raises(IntegrityError):
+        async with async_session_factory(bind=async_engine) as async_session:
+            group_crud = AioGroupCRUD(async_session=async_session)
+            await group_crud.update(g2.id, title="foo_bar_baz_1")
+
+
+@pytest.mark.asyncio
+async def test_if_async_raises_error_when_deleting_nonexistent_instance(
+    async_session: AsyncSession, async_content: SideEffect
+) -> None:
+    with pytest.raises(DoesNotExistError) as error:
+        group_crud = AioGroupCRUD(async_session=async_session)
+        await group_crud.delete(42)
+
+    assert (
+        "Instance of model='<class 'tests.models.Group'>' with id='42' was not found"
+        == str(error.value)
+    )

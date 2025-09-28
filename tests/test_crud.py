@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.sql.elements import BinaryExpression
 
 from inzicht import GenericCRUD, session_factory
-from inzicht.crud.errors import DoesNotExistError
+from inzicht.crud.errors import DoesNotExistError, IntegrityError
 from tests.aliases import SideEffect
 from tests.crud import (
     CourseCRUD,
@@ -320,3 +320,80 @@ def test_if_can_parameterize_at_instantiation(
             str(error.value)
             == f"Instance of model='<class 'tests.models.Group'>' with id='{created_id}' was not found"
         )
+
+
+def test_if_raises_integrity_error_when_creating_single_instance_given_unique_constraint_violated(
+    engine: Engine,
+) -> None:
+    with session_factory(bind=engine) as session:
+        group_crud = GenericCRUD[Group](session=session)
+        group_crud.create(title="foo_bar_baz")
+
+    with pytest.raises(IntegrityError):
+        with session_factory(bind=engine) as session:
+            group_crud = GenericCRUD[Group](session=session)
+            group_crud.create(title="foo_bar_baz")
+
+
+def test_if_raises_integrity_error_when_creating_multiple_instances_given_unique_constraint_violated(
+    engine: Engine,
+) -> None:
+    with pytest.raises(IntegrityError):
+        with session_factory(bind=engine) as session:
+            group_crud = GenericCRUD[Group](session=session)
+            group_crud.bulk_create(
+                [Group(title=f"foo_bar_baz"), Group(title=f"foo_bar_baz")]
+            )
+
+
+def test_if_raises_error_when_reading_nonexistent_instance(
+    session: Session, content: SideEffect
+) -> None:
+    with pytest.raises(DoesNotExistError) as error:
+        group_crud = GenericCRUD[Group](session=session)
+        group_crud.get(42)
+
+    assert (
+        "Instance of model='<class 'tests.models.Group'>' with id='42' was not found"
+        == str(error.value)
+    )
+
+
+def test_if_raises_error_when_updating_nonexistent_instance(
+    session: Session, content: SideEffect
+) -> None:
+    with pytest.raises(DoesNotExistError) as error:
+        group_crud = GenericCRUD[Group](session=session)
+        group_crud.update(42, title="foo")
+
+    assert (
+        "Instance of model='<class 'tests.models.Group'>' with id='42' was not found"
+        == str(error.value)
+    )
+
+
+def test_if_raises_integrity_error_when_updating_instance_given_unique_constraint_violated(
+    engine: Engine,
+) -> None:
+    with session_factory(bind=engine) as session:
+        group_crud = GenericCRUD[Group](session=session)
+        g1 = group_crud.create(title="foo_bar_baz_1")
+        g2 = group_crud.create(title="foo_bar_baz_2")
+
+    with pytest.raises(IntegrityError):
+        with session_factory(bind=engine) as session:
+            group_crud = GenericCRUD[Group](session=session)
+            group_crud.update(g2.id, title="foo_bar_baz_1")
+
+
+def test_if_raises_error_when_deleting_nonexistent_instance(
+    session: Session, content: SideEffect
+) -> None:
+    with pytest.raises(DoesNotExistError) as error:
+        group_crud = GenericCRUD[Group](session=session)
+        group_crud.delete(42)
+
+    assert (
+        "Instance of model='<class 'tests.models.Group'>' with id='42' was not found"
+        == str(error.value)
+    )

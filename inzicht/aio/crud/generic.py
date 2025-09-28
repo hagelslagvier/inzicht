@@ -2,11 +2,12 @@ from asyncio import Lock
 from collections.abc import Generator, Sequence
 from typing import Any, TypeVar
 
+import sqlalchemy.exc
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from inzicht.aio.crud.interfaces import AioCRUDInterface
-from inzicht.crud.errors import DoesNotExistError
+from inzicht.crud.errors import DoesNotExistError, IntegrityError, UnknowError
 from inzicht.declarative import DeclarativeBase
 
 T = TypeVar("T", bound=DeclarativeBase)
@@ -35,14 +36,24 @@ class AioGenericCRUD(AioCRUDInterface[T]):
     async def create(self, **kwargs: Any) -> T:
         model = self.get_model()
         instance = model.new(**kwargs)
-        async with self.lock:
-            self.async_session.add(instance)
-            await self.async_session.flush()
+        try:
+            async with self.lock:
+                self.async_session.add(instance)
+                await self.async_session.flush()
+        except sqlalchemy.exc.IntegrityError as error:
+            raise IntegrityError from error
+        except Exception as error:
+            raise UnknowError from error
         return instance
 
     async def bulk_create(self, instances: Sequence[T]) -> Sequence[T]:
-        self.async_session.add_all(instances)
-        await self.async_session.flush()
+        try:
+            self.async_session.add_all(instances)
+            await self.async_session.flush()
+        except sqlalchemy.exc.IntegrityError as error:
+            raise IntegrityError from error
+        except Exception as error:
+            raise UnknowError from error
         return instances
 
     async def get(self, id: int | str, /) -> T:
@@ -86,12 +97,22 @@ class AioGenericCRUD(AioCRUDInterface[T]):
                 f"Instance of model='{model}' with id='{id}' was not found"
             )
         instance.update(**kwargs)
-        self.async_session.add(instance)
-        await self.async_session.flush()
+        try:
+            self.async_session.add(instance)
+            await self.async_session.flush()
+        except sqlalchemy.exc.IntegrityError as error:
+            raise IntegrityError from error
+        except Exception as error:
+            raise UnknowError from error
         return instance
 
     async def delete(self, id: int | str, /) -> T:
+        model = self.get_model()
         instance = await self.get(id)
+        if not instance:
+            raise DoesNotExistError(
+                f"Instance of model='{model}' with id='{id}' was not found"
+            )
         await self.async_session.delete(instance)
         await self.async_session.flush()
         return instance

@@ -1,10 +1,11 @@
 from collections.abc import Generator, Sequence
 from typing import Any, TypeVar, get_args
 
+import sqlalchemy
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from inzicht.crud.errors import DoesNotExistError
+from inzicht.crud.errors import DoesNotExistError, IntegrityError, UnknowError
 from inzicht.crud.interfaces import CRUDInterface
 from inzicht.declarative import DeclarativeBase
 
@@ -38,13 +39,23 @@ class GenericCRUD(CRUDInterface[T]):
     def create(self, **kwargs: Any) -> T:
         model = self.get_model()
         instance = model.new(**kwargs)
-        self.session.add(instance)
-        self.session.flush()
+        try:
+            self.session.add(instance)
+            self.session.flush()
+        except sqlalchemy.exc.IntegrityError as error:
+            raise IntegrityError from error
+        except Exception as error:
+            raise UnknowError from error
         return instance
 
     def bulk_create(self, instances: Sequence[T]) -> Sequence[T]:
-        self.session.add_all(instances)
-        self.session.flush()
+        try:
+            self.session.add_all(instances)
+            self.session.flush()
+        except sqlalchemy.exc.IntegrityError as error:
+            raise IntegrityError from error
+        except Exception as error:
+            raise UnknowError from error
         return instances
 
     def get(self, id: int | str, /) -> T:
@@ -85,12 +96,22 @@ class GenericCRUD(CRUDInterface[T]):
                 f"Instance of model='{model}' with id='{id}' was not found"
             )
         instance.update(**kwargs)
-        self.session.add(instance)
-        self.session.flush()
+        try:
+            self.session.add(instance)
+            self.session.flush()
+        except sqlalchemy.exc.IntegrityError as error:
+            raise IntegrityError from error
+        except Exception as error:
+            raise UnknowError from error
         return instance
 
     def delete(self, id: int | str, /) -> T:
+        model = self.get_model()
         instance = self.get(id)
+        if not instance:
+            raise DoesNotExistError(
+                f"Instance of model='{model}' with id='{id}' was not found"
+            )
         self.session.delete(instance)
         self.session.flush()
         return instance
