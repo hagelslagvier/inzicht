@@ -12,9 +12,8 @@ class AioCRUDInterface(ABC, Generic[T]):
     Abstract base class that defines the CRUD interface for generic operations on a resource of type T.
     """
 
-    @classmethod
     @abstractmethod
-    def get_model(cls) -> type[T]:
+    def get_model(self) -> type[T]:
         """
         Retrieves the model class associated with the GenericCRUD class.
 

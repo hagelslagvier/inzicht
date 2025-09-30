@@ -1,6 +1,6 @@
 from asyncio import Lock
 from collections.abc import Generator, Sequence
-from typing import Any, TypeVar
+from typing import Any, TypeVar, get_args
 
 import sqlalchemy.exc
 from sqlalchemy import func, select
@@ -18,10 +18,16 @@ class AioGenericCRUD(AioCRUDInterface[T]):
         self.async_session = async_session
         self.lock = Lock()
 
-    @classmethod
-    def get_model(cls) -> type[T]:
-        (bases,) = cls.__orig_bases__  # type: ignore  # noqa
-        (model,) = bases.__args__
+    def get_model(self) -> type[T]:
+        if hasattr(self, "__orig_class__"):
+            (model,) = get_args(self.__orig_class__)
+        elif hasattr(self, "__orig_bases__"):
+            (base,) = self.__orig_bases__
+            (model,) = get_args(base)
+        else:
+            raise TypeError(
+                f"Can't define type parameter of generic class {self.__class__}"
+            )
         return model
 
     async def count(self, where: Any | None = None) -> int:
