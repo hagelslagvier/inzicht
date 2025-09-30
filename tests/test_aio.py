@@ -6,6 +6,7 @@ from sqlalchemy import and_, asc, desc, or_
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession
 from sqlalchemy.sql.elements import BinaryExpression
 
+from inzicht import AioGenericCRUD
 from inzicht.aio.crud.factories import async_session_factory
 from inzicht.crud.errors import DoesNotExistError, IntegrityError
 from tests.aio.crud import AioCourseCRUD, AioGroupCRUD, AioLockerCRUD, AioStudentCRUD
@@ -327,7 +328,7 @@ async def test_if_async_raises_error_when_reading_nonexistent_instance(
     async_session: AsyncSession, async_content: SideEffect
 ) -> None:
     with pytest.raises(DoesNotExistError) as error:
-        group_crud = AioGroupCRUD(async_session=async_session)
+        group_crud = AioGenericCRUD[Group](async_session=async_session)
         await group_crud.get(42)
 
     assert (
@@ -341,12 +342,12 @@ async def test_if_async_raises_integrity_error_when_creating_single_instance_giv
     async_engine: AsyncEngine,
 ) -> None:
     async with async_session_factory(bind=async_engine) as async_session:
-        group_crud = AioGroupCRUD(async_session=async_session)
+        group_crud = AioGenericCRUD[Group](async_session=async_session)
         await group_crud.create(title="foo_bar_baz")
 
     with pytest.raises(IntegrityError):
         async with async_session_factory(bind=async_engine) as async_session:
-            group_crud = AioGroupCRUD(async_session=async_session)
+            group_crud = AioGenericCRUD[Group](async_session=async_session)
             await group_crud.create(title="foo_bar_baz")
 
 
@@ -356,7 +357,7 @@ async def test_if_async_raises_integrity_error_when_creating_multiple_instances_
 ) -> None:
     with pytest.raises(IntegrityError):
         async with async_session_factory(bind=async_engine) as async_session:
-            group_crud = AioGroupCRUD(async_session=async_session)
+            group_crud = AioGenericCRUD[Group](async_session=async_session)
             await group_crud.bulk_create(
                 [Group(title=f"foo_bar_baz"), Group(title=f"foo_bar_baz")]
             )
@@ -367,7 +368,7 @@ async def test_if_async_raises_error_when_updating_nonexistent_instance(
     async_session: AsyncSession, async_content: SideEffect
 ) -> None:
     with pytest.raises(DoesNotExistError) as error:
-        group_crud = AioGroupCRUD(async_session=async_session)
+        group_crud = AioGenericCRUD[Group](async_session=async_session)
         await group_crud.update(42, title="foo")
 
     assert (
@@ -381,13 +382,13 @@ async def test_if_async_raises_integrity_error_when_updating_instance_given_uniq
     async_engine: AsyncEngine,
 ) -> None:
     async with async_session_factory(bind=async_engine) as async_session:
-        group_crud = AioGroupCRUD(async_session=async_session)
+        group_crud = AioGenericCRUD[Group](async_session=async_session)
         g1 = await group_crud.create(title="foo_bar_baz_1")
         g2 = await group_crud.create(title="foo_bar_baz_2")
 
     with pytest.raises(IntegrityError):
         async with async_session_factory(bind=async_engine) as async_session:
-            group_crud = AioGroupCRUD(async_session=async_session)
+            group_crud = AioGenericCRUD[Group](async_session=async_session)
             await group_crud.update(g2.id, title="foo_bar_baz_1")
 
 
@@ -396,7 +397,7 @@ async def test_if_async_raises_error_when_deleting_nonexistent_instance(
     async_session: AsyncSession, async_content: SideEffect
 ) -> None:
     with pytest.raises(DoesNotExistError) as error:
-        group_crud = AioGroupCRUD(async_session=async_session)
+        group_crud = AioGenericCRUD[Group](async_session=async_session)
         await group_crud.delete(42)
 
     assert (
