@@ -64,18 +64,6 @@ def test_if_can_bulk_create_multiple_records(session: Session) -> None:
         assert created_item.title == required_item.title
 
 
-def test_if_raises_exception_when_retrieves_nonexistent_record(
-    session: Session,
-) -> None:
-    with pytest.raises(DoesNotExistError) as error:
-        GroupCRUD(session=session).get(42)
-
-    assert (
-        str(error.value)
-        == "DB operation [GET] on instance of model '<class 'tests.models.Group'>' with id '42' failed because the instance was not found"
-    )
-
-
 def test_if_can_read_single_record(session: Session, content: SideEffect) -> None:
     student_crud = StudentCRUD(session=session)
 

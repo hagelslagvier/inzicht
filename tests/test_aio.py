@@ -91,19 +91,6 @@ async def test_if_can_async_bulk_create_multiple_records(
 
 
 @pytest.mark.asyncio
-async def test_if_raises_async_exception_when_retrieves_nonexistent_record(
-    async_session: AsyncSession,
-) -> None:
-    with pytest.raises(DoesNotExistError) as error:
-        await AioGroupCRUD(async_session=async_session).get(42)
-
-    assert (
-        str(error.value)
-        == "DB operation [GET] on instance of model '<class 'tests.models.Group'>' with id '42' failed because the instance was not found"
-    )
-
-
-@pytest.mark.asyncio
 async def test_if_can_async_read_single_record(
     async_session: AsyncSession, async_content: SideEffect
 ) -> None:
@@ -336,6 +323,20 @@ async def test_if_can_async_rollback_transaction_when_error_occurs(
 
 
 @pytest.mark.asyncio
+async def test_if_async_raises_error_when_reading_nonexistent_instance(
+    async_session: AsyncSession, async_content: SideEffect
+) -> None:
+    with pytest.raises(DoesNotExistError) as error:
+        group_crud = AioGroupCRUD(async_session=async_session)
+        await group_crud.get(42)
+
+    assert (
+        str(error.value)
+        == "DB operation [GET] on instance of model '<class 'tests.models.Group'>' with id '42' failed because the instance was not found"
+    )
+
+
+@pytest.mark.asyncio
 async def test_if_async_raises_integrity_error_when_creating_single_instance_given_unique_constraint_violated(
     async_engine: AsyncEngine,
 ) -> None:
@@ -359,20 +360,6 @@ async def test_if_async_raises_integrity_error_when_creating_multiple_instances_
             await group_crud.bulk_create(
                 [Group(title=f"foo_bar_baz"), Group(title=f"foo_bar_baz")]
             )
-
-
-@pytest.mark.asyncio
-async def test_if_async_raises_error_when_reading_nonexistent_instance(
-    async_session: AsyncSession, async_content: SideEffect
-) -> None:
-    with pytest.raises(DoesNotExistError) as error:
-        group_crud = AioGroupCRUD(async_session=async_session)
-        await group_crud.get(42)
-
-    assert (
-        str(error.value)
-        == "DB operation [GET] on instance of model '<class 'tests.models.Group'>' with id '42' failed because the instance was not found"
-    )
 
 
 @pytest.mark.asyncio
