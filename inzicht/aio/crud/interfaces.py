@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from collections.abc import Generator, Sequence
-from typing import Any, Generic, TypeVar
+from typing import Any, Generic, TypeVar, overload
 
 from inzicht.declarative import DeclarativeBase
 
@@ -33,12 +33,23 @@ class AioCRUDInterface(ABC, Generic[T]):
             int: The total number of records in the collection.
         """
 
+    @overload
     @abstractmethod
-    async def create(self, **kwargs: Any) -> T:
+    async def create(self, instance: T, /) -> T:
+        pass
+
+    @overload
+    @abstractmethod
+    async def create(self, /, **kwargs: Any) -> T:
+        pass
+
+    @abstractmethod
+    async def create(self, instance: T | None = None, /, **kwargs: Any) -> T:
         """
         Create a new record from the provided keyword-arguments.
 
         Args:
+        instance (T): An instance of the model to be created.
         **kwargs (Any): The attributes to initialize the model instance with.
 
         Returns:

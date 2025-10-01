@@ -39,9 +39,13 @@ class AioGenericCRUD(AioCRUDInterface[T]):
         count = result.scalar() or 0
         return count
 
-    async def create(self, **kwargs: Any) -> T:
+    async def create(self, instance: T | None = None, /, **kwargs: Any) -> T:
         model = self.get_model()
-        instance = model.new(**kwargs)
+        if instance and kwargs:
+            raise ValueError(
+                "Cannot provide both 'instance' and keyword arguments for creation"
+            )
+        instance = instance or model.new(**kwargs)
         message = f"DB operation [CREATE] on instance '{instance}' of model '{model}'"
         try:
             async with self.lock:

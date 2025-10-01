@@ -36,10 +36,34 @@ def test_if_can_count_records(
     assert count == expected
 
 
+def test_if_raises_error_when_creating_instance_with_invalid_args(
+    session: Session,
+) -> None:
+    instance = Group(title="ABC", students=[])
+    kwargs = {"title": "ABC"}
+
+    with pytest.raises(ValueError) as error:
+        GroupCRUD(session=session).create(instance, **kwargs)
+
+    assert (
+        str(error.value)
+        == "Cannot provide both 'instance' and keyword arguments for creation"
+    )
+
+
 def test_if_can_create_single_record(session: Session) -> None:
     group_crud = GroupCRUD(session=session)
 
     created = group_crud.create(title="ABC")
+    assert all([created.id, created.created_on, created.updated_on])
+    assert created.title == "ABC"
+
+
+def test_if_can_create_single_record_from_object(session: Session) -> None:
+    group = Group(title="ABC", students=[])
+    group_crud = GroupCRUD(session=session)
+
+    created = group_crud.create(group)
     assert all([created.id, created.created_on, created.updated_on])
     assert created.title == "ABC"
 

@@ -38,10 +38,38 @@ async def test_if_can_async_count_records(
 
 
 @pytest.mark.asyncio
+async def test_if_async_raises_error_when_creating_instance_with_invalid_args(
+    async_session: AsyncSession,
+) -> None:
+    instance = Group(title="ABC", students=[])
+    kwargs = {"title": "ABC"}
+
+    with pytest.raises(ValueError) as error:
+        await AioGroupCRUD(async_session=async_session).create(instance, **kwargs)
+
+    assert (
+        str(error.value)
+        == "Cannot provide both 'instance' and keyword arguments for creation"
+    )
+
+
+@pytest.mark.asyncio
 async def test_if_can_async_create_single_record(async_session: AsyncSession) -> None:
     group_crud = AioGroupCRUD(async_session=async_session)
 
     created = await group_crud.create(title="ABC")
+    assert all([created.id, created.created_on, created.updated_on])
+    assert created.title == "ABC"
+
+
+@pytest.mark.asyncio
+async def test_if_can_async_create_single_record_from_object(
+    async_session: AsyncSession,
+) -> None:
+    group = Group(title="ABC", students=[])
+    group_crud = AioGroupCRUD(async_session=async_session)
+
+    created = await group_crud.create(group)
     assert all([created.id, created.created_on, created.updated_on])
     assert created.title == "ABC"
 
