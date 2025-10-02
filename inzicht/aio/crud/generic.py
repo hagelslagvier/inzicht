@@ -1,3 +1,4 @@
+import logging
 from asyncio import Lock
 from collections.abc import Generator, Sequence
 from typing import Any, TypeVar, get_args
@@ -11,6 +12,17 @@ from inzicht.crud.errors import DoesNotExistError, IntegrityError, UnknowError
 from inzicht.declarative import DeclarativeBase
 
 T = TypeVar("T", bound=DeclarativeBase)
+
+
+formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+
+handler = logging.StreamHandler()
+handler.setLevel(logging.INFO)
+handler.setFormatter(formatter)
+
+logger = logging.getLogger("aio.crud.generic")
+logger.addHandler(handler)
+logger.setLevel(logging.INFO)
 
 
 class AioGenericCRUD(AioCRUDInterface[T]):
@@ -46,40 +58,48 @@ class AioGenericCRUD(AioCRUDInterface[T]):
                 "Cannot provide both 'instance' and keyword arguments for creation"
             )
         instance = instance or model.new(**kwargs)
-        message = f"DB operation [CREATE] on instance '{instance}' of model '{model}'"
+        header = f"DB operation [CREATE] on instance '{instance}' of model '{model}'"
         try:
             async with self.lock:
                 self.async_session.add(instance)
                 await self.async_session.flush()
         except sqlalchemy.exc.IntegrityError as error:
-            error_message = f"{message} failed because of integrity constraints"
+            error_message = f"{header} failed because of integrity constraints"
+            logger.error(error_message)
             raise IntegrityError(error_message, **kwargs) from error
         except Exception as error:
-            error_message = f"{message} failed because of unknown error"
+            error_message = f"{header} failed because of unknown error"
+            logger.error(error_message)
             raise UnknowError(error_message, **kwargs) from error
+        logger.info(f"{header} succeeded")
         return instance
 
     async def bulk_create(self, instances: Sequence[T]) -> Sequence[T]:
         model = self.get_model()
-        message = f"DB operation [BULK_CREATE] on {len(instances)} instances '[{instances[0]},...]' of model '{model}'"
+        header = f"DB operation [BULK_CREATE] on {len(instances)} instances '[{instances[0]},...]' of model '{model}'"
         try:
             self.async_session.add_all(instances)
             await self.async_session.flush()
         except sqlalchemy.exc.IntegrityError as error:
-            error_message = f"{message} failed because of integrity constraints"
+            error_message = f"{header} failed because of integrity constraints"
+            logger.error(error_message)
             raise IntegrityError(error_message) from error
         except Exception as error:
-            error_message = f"{message} failed because of unknow error"
+            error_message = f"{header} failed because of unknow error"
+            logger.error(error_message)
             raise UnknowError(error_message) from error
+        logger.info(f"{header} succeeded")
         return instances
 
     async def get(self, id: int | str, /) -> T:
         model = self.get_model()
         instance = await self.async_session.get(model, id)
-        message = f"DB operation [GET] on instance of model '{model}' with id '{id}'"
+        header = f"DB operation [GET] on instance of model '{model}' with id '{id}'"
         if not instance:
-            error_message = f"{message} failed because the instance was not found"
+            error_message = f"{header} failed because the instance was not found"
+            logger.error(error_message)
             raise DoesNotExistError(error_message, id=id)
+        logger.info(f"{header} succeeded")
         return instance
 
     async def read(
@@ -92,6 +112,7 @@ class AioGenericCRUD(AioCRUDInterface[T]):
     ) -> Generator[T, None, None]:
         model = self.get_model()
         query = select(model)
+        header = f"DB operation [READ] on model '{model}'"
         if where is not None:
             query = query.filter(where)
         if order_by is not None:
@@ -102,6 +123,7 @@ class AioGenericCRUD(AioCRUDInterface[T]):
             query = query.limit(take)
         result = await self.async_session.execute(query)
         items = (item for item in result.scalars())
+        logger.info(f"{header} succeeded")
         return items
 
     async def update(self, id: int | str, /, **kwargs: Any) -> T:
@@ -109,29 +131,35 @@ class AioGenericCRUD(AioCRUDInterface[T]):
         instance = await self.async_session.get(
             model, id, with_for_update={"nowait": True}
         )
-        message = f"DB operation [UPDATE] on instance of model '{model}' with id '{id}'"
+        header = f"DB operation [UPDATE] on instance of model '{model}' with id '{id}'"
         if not instance:
-            error_message = f"{message} failed because the instance was not found"
+            error_message = f"{header} failed because the instance was not found"
+            logger.error(error_message)
             raise DoesNotExistError(error_message, id=id, **kwargs)
         instance.update(**kwargs)
         try:
             self.async_session.add(instance)
             await self.async_session.flush()
         except sqlalchemy.exc.IntegrityError as error:
-            error_message = f"{message} failed because of integrity constraints"
+            error_message = f"{header} failed because of integrity constraints"
+            logger.error(error_message)
             raise IntegrityError(error_message, **kwargs) from error
         except Exception as error:
-            error_message = f"{message} failed because of unknow error"
+            error_message = f"{header} failed because of unknow error"
+            logger.error(error_message)
             raise UnknowError(error_message, **kwargs) from error
+        logger.info(f"{header} succeeded")
         return instance
 
     async def delete(self, id: int | str, /) -> T:
         model = self.get_model()
         instance = await self.get(id)
-        message = f"DB operation [DELETE] on instance {instance} of model '{model}' with id '{id}'"
+        header = f"DB operation [DELETE] on instance {instance} of model '{model}' with id '{id}'"
         if not instance:
-            error_message = f"{message} failed because the instance was not found"
+            error_message = f"{header} failed because the instance was not found"
+            logger.error(error_message)
             raise DoesNotExistError(error_message)
         await self.async_session.delete(instance)
         await self.async_session.flush()
+        logger.info(f"{header} succeeded")
         return instance
