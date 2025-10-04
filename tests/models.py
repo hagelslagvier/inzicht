@@ -20,9 +20,13 @@ _now = lambda: datetime.datetime.now()
 class Base(DeclarativeBase):
     __abstract__ = True
 
-    id = mapped_column(Integer, primary_key=True)
-    created_on = mapped_column(DateTime(timezone=True), default=_now)
-    updated_on = mapped_column(DateTime(timezone=True), default=_now, onupdate=_now)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    created_on: Mapped[datetime.datetime] = mapped_column(
+        DateTime(timezone=True), default=_now
+    )
+    updated_on: Mapped[datetime.datetime] = mapped_column(
+        DateTime(timezone=True), default=_now, onupdate=_now
+    )
 
 
 m2m_student_course = Table(
