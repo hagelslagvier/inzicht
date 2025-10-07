@@ -1,3 +1,4 @@
+import logging
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -15,6 +16,8 @@ from tests.crud import (
     StudentCRUD,
 )
 from tests.models import Course, Group, Student
+
+logging.getLogger("crud.generic").setLevel(logging.CRITICAL)
 
 
 @pytest.mark.parametrize(

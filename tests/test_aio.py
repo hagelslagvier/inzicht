@@ -1,4 +1,5 @@
 import asyncio
+import logging
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -12,6 +13,8 @@ from inzicht.crud.errors import DoesNotExistError, IntegrityError
 from tests.aio.crud import AioCourseCRUD, AioGroupCRUD, AioLockerCRUD, AioStudentCRUD
 from tests.aliases import SideEffect
 from tests.models import Course, Group, Student
+
+logging.getLogger("aio.crud.generic").setLevel(logging.CRITICAL)
 
 
 @pytest.mark.asyncio
